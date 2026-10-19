@@ -1,0 +1,86 @@
+# =========================================================
+#  I.E.E. Melitón Carvajal – sitio estático
+# =========================================================
+
+Options -Indexes
+DirectoryIndex index.html
+
+# ---------- Forzar HTTPS y quitar "www" ----------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+  # ---------- Redirecciones desde las URLs antiguas de WordPress ----------
+  RewriteRule ^index\.php/nosotros/?$  /nosotros.html [L,R=301,NC]
+  RewriteRule ^index\.php/contacto/?$  /contacto.html [L,R=301,NC]
+  RewriteRule ^index\.php/galeria/?$   https://sites.google.com/ieemelitoncarvajal.edu.pe/galeria [L,R=301,NC]
+  RewriteRule ^index\.php/?$           / [L,R=301,NC]
+  RewriteRule ^index\.php/.+$          / [L,R=301,NC]
+  RewriteRule ^(wp-admin|wp-login\.php|wp-content|wp-includes|xmlrpc\.php|feed|wp-json|wp-sitemap.*)(/.*)?$ / [L,R=301,NC]
+
+  # URLs limpias: /nosotros  ->  /nosotros.html
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME}.html -f
+  RewriteRule ^([^/.]+)/?$ $1.html [L]
+</IfModule>
+
+ErrorDocument 404 /index.html
+
+# ---------- Tipos MIME ----------
+<IfModule mod_mime.c>
+  AddType image/webp .webp
+  AddType video/mp4  .mp4
+  AddType application/javascript .js
+  AddType text/css .css
+</IfModule>
+
+# ---------- Compresión ----------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript text/javascript application/json image/svg+xml
+</IfModule>
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/css application/javascript text/javascript application/json image/svg+xml
+</IfModule>
+
+# ---------- Caché del navegador ----------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 month"
+  ExpiresByType text/html                "access plus 0 seconds"
+  ExpiresByType text/css                 "access plus 1 year"
+  ExpiresByType application/javascript   "access plus 1 year"
+  ExpiresByType text/javascript          "access plus 1 year"
+  ExpiresByType image/jpeg               "access plus 1 year"
+  ExpiresByType image/png                "access plus 1 year"
+  ExpiresByType image/webp               "access plus 1 year"
+  ExpiresByType image/gif                "access plus 1 year"
+  ExpiresByType image/svg+xml            "access plus 1 year"
+  ExpiresByType image/x-icon             "access plus 1 year"
+  ExpiresByType video/mp4                "access plus 1 year"
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|jpe?g|png|gif|webp|svg|ico|mp4)$">
+    Header set Cache-Control "public, max-age=31536000"
+  </FilesMatch>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+
+  # ---------- Seguridad ----------
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
+</IfModule>
+
+# Bloquear archivos ocultos y de respaldo
+<FilesMatch "(^\.|\.(bak|sql|log|ini|sh|zip)$)">
+  Require all denied
+</FilesMatch>
