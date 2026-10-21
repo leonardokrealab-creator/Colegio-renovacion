@@ -147,9 +147,18 @@
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       });
       // Si una imagen del comunicado no existe, se oculta
-      modal.querySelectorAll('img').forEach(function (img) {
-        img.addEventListener('error', function () { img.style.display = 'none'; });
-      });
+      // Si la portada no existe en Media/, el comunicado no se muestra
+      var portada = modal.querySelector('img');
+      var portadaRota = false;
+      if (portada) {
+        portada.addEventListener('error', function () {
+          portadaRota = true;
+          if (!modal.hidden) cerrar();
+        });
+        if (portada.complete && portada.naturalWidth === 0) portadaRota = true;
+      }
+      var abrirOriginal = abrir;
+      abrir = function () { if (!portadaRota) abrirOriginal(); };
       if (document.readyState === 'complete') setTimeout(abrir, 400);
       else window.addEventListener('load', function () { setTimeout(abrir, 400); });
     }

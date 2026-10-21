@@ -172,20 +172,22 @@ body.scrolled #top-menu a::after{bottom:14px}
 #footer-bottom .fb-icon{color:#fff;display:inline-flex;padding-bottom:10px;transition:transform .3s}
 #footer-bottom .fb-icon:hover{transform:translateY(-2px)}
 
-/* ---------- 6. Comunicado (ventana flotante) ---------- */
-.comunicado{position:fixed;inset:0;z-index:200000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.7);opacity:0;transition:opacity .35s ease;cursor:pointer}
+/* ---------- 6. Comunicado (ventana flotante: solo la portada) ---------- */
+.comunicado{position:fixed;inset:0;z-index:200000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.75);opacity:0;transition:opacity .35s ease;cursor:pointer}
 .comunicado[hidden]{display:none}
 .comunicado.is-open{opacity:1}
-.comunicado-caja{position:relative;width:100%;max-width:640px;max-height:calc(100vh - 40px);overflow:auto;background:#fff;border-radius:6px;box-shadow:0 30px 80px rgba(0,0,0,.4);padding:40px 32px 32px;cursor:auto;transform:translateY(30px) scale(.96);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.comunicado-caja{position:relative;display:inline-block;max-width:min(92vw,720px);cursor:auto;line-height:0;transform:translateY(30px) scale(.95);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
 .comunicado.is-open .comunicado-caja{transform:none}
-.comunicado-cerrar{position:absolute;top:8px;right:10px;width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:#333;font-size:32px;line-height:1;cursor:pointer;transition:background .2s,transform .3s}
-.comunicado-cerrar:hover{background:#f1f1f1;transform:rotate(90deg)}
-.comunicado-contenido h2{font-family:'Roboto',Helvetica,Arial,sans-serif;font-size:28px;font-weight:500;line-height:1.2em;color:#000;text-align:center;padding-bottom:16px}
-.comunicado-contenido img{display:block;margin:0 auto 16px;max-height:70vh;width:auto}
-.comunicado-contenido p{text-align:center}
-.comunicado-boton{display:inline-block;margin-top:8px;padding:12px 28px;background:#e02b20;color:#fff;font:700 16px 'Roboto',Helvetica,Arial,sans-serif;transition:filter .3s}
-.comunicado-boton:hover{filter:brightness(1.1)}
+.comunicado-enlace{position:relative;display:block;overflow:hidden;border-radius:6px;background:#fff;box-shadow:0 30px 80px rgba(0,0,0,.5);cursor:zoom-in}
+.comunicado-enlace img{display:block;width:auto;height:auto;max-width:100%;max-height:calc(100vh - 80px);transition:transform .5s ease}
+.comunicado-enlace:hover img{transform:scale(1.02)}
+.comunicado-ver{position:absolute;left:0;right:0;bottom:0;padding:14px 16px;background:linear-gradient(transparent,rgba(0,0,0,.75));color:#fff;font:700 15px/1.3 'Roboto',Helvetica,Arial,sans-serif;text-align:center;opacity:0;transform:translateY(8px);transition:opacity .3s ease,transform .3s ease}
+.comunicado-enlace:hover .comunicado-ver,.comunicado-enlace:focus-visible .comunicado-ver{opacity:1;transform:none}
+@media (hover:none){.comunicado-ver{opacity:1;transform:none}}
+.comunicado-cerrar{position:absolute;top:-14px;right:-14px;z-index:2;width:38px;height:38px;border:0;border-radius:50%;background:#fff;color:#222;font-size:28px;line-height:38px;text-align:center;padding:0;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35);transition:transform .3s ease,background .2s}
+.comunicado-cerrar:hover{transform:rotate(90deg);background:#f1f1f1}
 body.modal-open{overflow:hidden}
+@media (max-width:767px){.comunicado-cerrar{top:-12px;right:-6px;width:34px;height:34px;line-height:34px;font-size:24px}}
 
 /* ---------- 7. Animaciones ---------- */
 .js [data-reveal]{opacity:0;transform:translateY(40px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
@@ -248,8 +250,6 @@ body.modal-open{overflow:hidden}
   .et_pb_button{font-size:16px}
   .footer-widget{width:100%;margin-right:0}
   #footer-bottom .container{flex-direction:column;text-align:center;gap:4px}
-  .comunicado-caja{padding:44px 18px 22px}
-  .comunicado-contenido h2{font-size:22px}
   .map{height:320px}
 }
 
