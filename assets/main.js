@@ -101,7 +101,71 @@
     go(0); restart();
   });
 
-  /* ---------- Comunicado flotante ---------- */
+  /* ---------- Comunicado flotante ----------
+     Muestra la primera hoja del PDF (o la imagen) indicada en el href del
+     enlace .comunicado-enlace. Al hacer clic se abre el archivo completo.
+     La vista previa del PDF se dibuja con PDF.js, que solo se descarga
+     cuando hay un comunicado activo en PDF. */
+  var PDFJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  var PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  function cargarScript(src) {
+    return new Promise(function (ok, fallo) {
+      if (window.pdfjsLib) return ok();
+      var s = document.createElement('script');
+      s.src = src; s.async = true;
+      s.onload = function () { ok(); };
+      s.onerror = function () { fallo(new Error('No se pudo cargar ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function vistaPreviaPdf(url, destino) {
+    return cargarScript(PDFJS_URL).then(function () {
+      var lib = window.pdfjsLib;
+      lib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+      return lib.getDocument(url).promise;
+    }).then(function (pdf) {
+      return pdf.getPage(1);
+    }).then(function (pagina) {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var base = pagina.getViewport({ scale: 1 });
+      var anchoMax = Math.min(window.innerWidth * 0.92, 720);
+      var altoMax = window.innerHeight - 80;
+      var escalaCss = Math.min(anchoMax / base.width, altoMax / base.height);
+      var vp = pagina.getViewport({ scale: escalaCss * dpr });
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.floor(vp.width);
+      canvas.height = Math.floor(vp.height);
+      canvas.style.width = Math.floor(vp.width / dpr) + 'px';
+      canvas.style.height = Math.floor(vp.height / dpr) + 'px';
+      canvas.setAttribute('role', 'img');
+      canvas.setAttribute('aria-label', 'Primera página del comunicado');
+      destino.insertBefore(canvas, destino.firstChild);
+      return pagina.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    });
+  }
+
+  function vistaPreviaImagen(url, destino) {
+    return new Promise(function (ok, fallo) {
+      var img = new Image();
+      img.alt = 'Comunicado de la I.E.E. Melitón Carvajal (clic para ver completo)';
+      img.onload = function () { destino.insertBefore(img, destino.firstChild); ok(); };
+      img.onerror = function () { fallo(new Error('Imagen no encontrada')); };
+      img.src = url;
+    });
+  }
+
+  // Si PDF.js no carga (sin internet, bloqueado), se muestra una tarjeta simple
+  function tarjetaRespaldo(destino) {
+    var t = document.createElement('span');
+    t.className = 'comunicado-respaldo';
+    t.innerHTML = '<span class="comunicado-respaldo-icono" aria-hidden="true">PDF</span>' +
+                  '<span class="comunicado-respaldo-texto">Comunicado</span>' +
+                  '<span class="comunicado-respaldo-sub">Haz clic para verlo</span>';
+    destino.insertBefore(t, destino.firstChild);
+  }
+
   var modal = document.getElementById('comunicado');
   if (modal && modal.getAttribute('data-activo') === 'si') {
     var hasta = modal.getAttribute('data-hasta');
@@ -113,7 +177,10 @@
     var unaVez = modal.getAttribute('data-mostrar') === 'una-vez';
     var visto = false;
     try { visto = unaVez && sessionStorage.getItem('comunicadoVisto') === '1'; } catch (e) {}
-    if (!vencido && !visto) {
+    var enlace = modal.querySelector('.comunicado-enlace');
+    var archivo = enlace ? (enlace.getAttribute('href') || '') : '';
+
+    if (!vencido && !visto && archivo && archivo !== '#') {
       var caja = modal.querySelector('.comunicado-caja');
       var cerrarBtn = modal.querySelector('.comunicado-cerrar');
       var lastFocus = null;
@@ -131,36 +198,35 @@
         setTimeout(function () { modal.hidden = true; }, reduce ? 0 : 350);
         if (lastFocus && lastFocus.focus) lastFocus.focus();
       };
-      // Cerrar con la X
       cerrarBtn.addEventListener('click', cerrar);
-      // Cerrar al hacer clic fuera del comunicado
       modal.addEventListener('click', function (e) { if (!caja.contains(e.target)) cerrar(); });
-      // Cerrar con la tecla Esc
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) cerrar(); });
-      // Mantener el foco dentro del comunicado
       modal.addEventListener('keydown', function (e) {
         if (e.key !== 'Tab') return;
-        var f = modal.querySelectorAll('a[href], button, [tabindex]:not([tabindex="-1"])');
-        if (!f.length) return;
+        var f = modal.querySelectorAll('a[href], button');
         var first = f[0], last = f[f.length - 1];
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
       });
-      // Si una imagen del comunicado no existe, se oculta
-      // Si la portada no existe en Media/, el comunicado no se muestra
-      var portada = modal.querySelector('img');
-      var portadaRota = false;
-      if (portada) {
-        portada.addEventListener('error', function () {
-          portadaRota = true;
-          if (!modal.hidden) cerrar();
-        });
-        if (portada.complete && portada.naturalWidth === 0) portadaRota = true;
-      }
-      var abrirOriginal = abrir;
-      abrir = function () { if (!portadaRota) abrirOriginal(); };
-      if (document.readyState === 'complete') setTimeout(abrir, 400);
-      else window.addEventListener('load', function () { setTimeout(abrir, 400); });
+
+      var esPdf = /\.pdf($|[?#])/i.test(archivo);
+      var preparar = function () {
+        if (enlace.querySelector('img, canvas')) return Promise.resolve(); // portada puesta a mano
+        if (esPdf) {
+          enlace.classList.add('es-pdf');
+          return vistaPreviaPdf(archivo, enlace).catch(function (err) {
+            if (window.console) console.warn('Comunicado: no se pudo generar la vista previa del PDF.', err);
+            tarjetaRespaldo(enlace);
+          });
+        }
+        return vistaPreviaImagen(archivo, enlace);
+      };
+      var iniciar = function () {
+        preparar().then(function () { setTimeout(abrir, 200); })
+          .catch(function () { /* archivo no encontrado: no se muestra nada */ });
+      };
+      if (document.readyState === 'complete') iniciar();
+      else window.addEventListener('load', iniciar);
     }
   }
 

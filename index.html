@@ -66,25 +66,21 @@
 
 <!-- =====================================================================
      COMUNICADO (ventana flotante al abrir la página de Inicio)
-     Solo se muestra la PORTADA (imagen). Al hacer clic en ella se abre
-     el comunicado completo (PDF o imagen grande) en otra pestaña.
+     Solo pon el archivo en href: la página muestra automáticamente
+     la PRIMERA HOJA del PDF (o la imagen). Al hacer clic se abre completo.
 
      · Para MOSTRARLO:  data-activo="si"     · Para OCULTARLO: data-activo="no"
      · data-mostrar="siempre"  → aparece cada vez que se abre Inicio
        data-mostrar="una-vez"  → aparece solo la primera vez por visita
      · data-hasta="AAAA-MM-DD" (opcional) → deja de mostrarse después de esa fecha
-
-     Archivos (súbelos a la carpeta Media/):
-     · href = el comunicado completo  → ej. Media/comunicado.pdf  o  Media/comunicado.jpg
-     · src  = la portada que se ve    → ej. Media/comunicado-portada.jpg
-       (si el comunicado es solo una imagen, usa el mismo archivo en href y src)
+     · href → el archivo subido a Media/ (PDF, JPG o PNG)
+       ej.  Media/comunicado.pdf   ó   Media/comunicado.jpg
      ===================================================================== -->
 <div id="comunicado" class="comunicado" data-activo="no" data-mostrar="siempre" data-hasta=""
      role="dialog" aria-modal="true" aria-label="Comunicado" hidden>
   <div class="comunicado-caja">
     <button type="button" class="comunicado-cerrar" aria-label="Cerrar comunicado">&times;</button>
-    <a class="comunicado-enlace" href="Media/comunicado.pdf" target="_blank" rel="noopener">
-      <img src="Media/comunicado-portada.jpg" alt="Comunicado de la I.E.E. Melitón Carvajal (clic para ver completo)">
+    <a class="comunicado-enlace" href="Media/comunicado.pdf" target="_blank" rel="noopener" aria-label="Ver comunicado completo">
       <span class="comunicado-ver">Ver comunicado completo</span>
     </a>
   </div>
